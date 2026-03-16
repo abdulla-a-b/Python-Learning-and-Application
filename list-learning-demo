@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-Frame-Options" content="ALLOWALL"/>
+  <title>How a Python List Works</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f3ee;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+ 
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 28px 28px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+ 
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+ 
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 28px;
+    }
+ 
+    .container-box {
+      border: 1.5px solid #d0d0d0;
+      border-radius: 16px;
+      padding: 16px 12px 12px;
+      background: #f9f8f5;
+      margin-bottom: 8px;
+    }
+ 
+    .items-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+ 
+    .item {
+      flex: 1;
+      min-width: 0;
+      border: 1.5px solid #378ADD;
+      border-radius: 10px;
+      background: #E6F1FB;
+      padding: 12px 6px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      opacity: 0;
+      animation: fadeSlideDown 0.4s ease forwards;
+    }
+    .item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(55,138,221,0.2);
+    }
+    .item.active {
+      border-color: #185FA5;
+      border-width: 2px;
+      box-shadow: 0 0 0 4px rgba(55,138,221,0.15);
+    }
+ 
+    .item-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0C447C;
+    }
+    .item-type {
+      font-size: 11px;
+      color: #185FA5;
+      margin-top: 4px;
+    }
+ 
+    .index-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    .idx-cell {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+    }
+    .pos-idx {
+      font-size: 12px;
+      color: #555;
+      opacity: 0;
+      animation: fadeSlideUp 0.4s ease forwards;
+    }
+    .neg-idx {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 2px;
+      opacity: 0;
+      animation: fadeSlideUp 0.4s ease 0.2s forwards;
+    }
+ 
+    .arrows-section {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .arrow-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+    .arrow-track {
+      flex: 1;
+      height: 18px;
+      opacity: 0;
+    }
+    .arrow-track.pos { animation: arrowRight 0.7s ease 1.0s forwards; }
+    .arrow-track.neg { animation: arrowLeft  0.7s ease 1.2s forwards; }
+    .arrow-label {
+      white-space: nowrap;
+      opacity: 0;
+    }
+    .arrow-label.pos { animation: fadeSlideUp 0.4s ease 1.0s forwards; }
+    .arrow-label.neg { animation: fadeSlideUp 0.4s ease 1.2s forwards; }
+ 
+    .info-box {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: #f9f8f5;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      font-size: 13.5px;
+      color: #555;
+      line-height: 1.7;
+      min-height: 52px;
+    }
+    .info-box strong { color: #1a1a1a; font-weight: 600; }
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: #eef2f8;
+      color: #185FA5;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+ 
+    .hint {
+      text-align: center;
+      font-size: 11px;
+      color: #bbb;
+      margin-top: 10px;
+    }
+ 
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes arrowRight {
+      from { clip-path: inset(0 100% 0 0); opacity: 1; }
+      to   { clip-path: inset(0 0% 0 0);   opacity: 1; }
+    }
+    @keyframes arrowLeft {
+      from { clip-path: inset(0 0 0 100%); opacity: 1; }
+      to   { clip-path: inset(0 0 0 0%);   opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>How a Python list works</h1>
+    <p class="subtitle">An ordered collection — each item has a position (index) starting from 0</p>
+ 
+    <div class="container-box">
+      <div class="items-row" id="items-row"></div>
+    </div>
+ 
+    <div class="index-row" id="index-row"></div>
+ 
+    <div class="arrows-section">
+      <div class="arrow-line">
+        <svg class="arrow-track pos" viewBox="0 0 200 18" preserveAspectRatio="none">
+          <line x1="2" y1="9" x2="194" y2="9" stroke="#aaa" stroke-width="1.2"/>
+          <polyline points="186,4 194,9 186,14" fill="none" stroke="#aaa" stroke-width="1.4"/>
+        </svg>
+        <span class="arrow-label pos">positive indexing →</span>
+      </div>
+      <div class="arrow-line">
+        <span class="arrow-label neg">← negative indexing</span>
+        <svg class="arrow-track neg" viewBox="0 0 200 18" preserveAspectRatio="none">
+          <line x1="198" y1="9" x2="6" y2="9" stroke="#aaa" stroke-width="1.2"/>
+          <polyline points="14,4 6,9 14,14" fill="none" stroke="#aaa" stroke-width="1.4"/>
+        </svg>
+      </div>
+    </div>
+ 
+    <div class="info-box" id="info-box">
+      👆 Click any item above to explore it.
+    </div>
+    <p class="hint">Lists in Python can hold any mix of data types</p>
+  </div>
+ 
+  <script>
+    const items = [
+      {
+        value: '"Alice"',
+        type: 'str',
+        detail: '<strong>String (str)</strong> — text wrapped in quotes.<br>Access with <code>my_list[0]</code> or <code>my_list[-6]</code>.<br>Example: <code>my_list[0] → "Alice"</code>'
+      },
+      {
+        value: '25',
+        type: 'int',
+        detail: '<strong>Integer (int)</strong> — a whole number, no decimal point.<br>Access with <code>my_list[1]</code> or <code>my_list[-5]</code>.<br>Example: <code>my_list[1] → 25</code>'
+      },
+      {
+        value: '3.14',
+        type: 'float',
+        detail: '<strong>Float (float)</strong> — a number with a decimal point.<br>Access with <code>my_list[2]</code> or <code>my_list[-4]</code>.<br>Example: <code>my_list[2] → 3.14</code>'
+      },
+      {
+        value: 'True',
+        type: 'bool',
+        detail: '<strong>Boolean (bool)</strong> — either <code>True</code> or <code>False</code>.<br>Access with <code>my_list[3]</code> or <code>my_list[-3]</code>.<br>Example: <code>my_list[3] → True</code>'
+      },
+      {
+        value: '[1, 2]',
+        type: 'list',
+        detail: '<strong>Nested list (list)</strong> — a list inside a list!<br>Access with <code>my_list[4]</code> or <code>my_list[-2]</code>.<br>Example: <code>my_list[4][0] → 1</code>'
+      },
+      {
+        value: '"Bob"',
+        type: 'str',
+        detail: '<strong>String (str)</strong> — another string. Lists can mix any types freely.<br>Access with <code>my_list[5]</code> or <code>my_list[-1]</code>.<br>Example: <code>my_list[-1] → "Bob"</code>'
+      },
+    ];
+ 
+    const n = items.length;
+    const itemsRow  = document.getElementById('items-row');
+    const indexRow  = document.getElementById('index-row');
+    const infoBox   = document.getElementById('info-box');
+ 
+    items.forEach((it, i) => {
+      const delay = `${0.05 + i * 0.08}s`;
+ 
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.style.animationDelay = delay;
+      div.innerHTML = `<div class="item-value">${it.value}</div><div class="item-type">${it.type}</div>`;
+      div.addEventListener('click', () => {
+        document.querySelectorAll('.item').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
+        infoBox.innerHTML = it.detail;
+      });
+      itemsRow.appendChild(div);
+ 
+      const cell = document.createElement('div');
+      cell.className = 'idx-cell';
+      cell.innerHTML = `
+        <div class="pos-idx" style="animation-delay:${delay}">index ${i}</div>
+        <div class="neg-idx" style="animation-delay:${delay}">${i - n}</div>
+      `;
+      indexRow.appendChild(cell);
+    });
+  </script>
+</body>
+</html>
